@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>模拟系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* 星星背景 */
+  .stars {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+  .star {
+    position: absolute;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    0% { opacity: 0.2; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* 主内容 */
+  .content {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+    padding: 60px 20px 40px;
+  }
+
+  /* 顶部欢迎区 */
+  .hero {
+    text-align: center;
+    margin-top: 8vh;
+    animation: fadeInUp 1s ease-out;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    line-height: 1.3;
+  }
+  .hero p {
+    margin-top: 16px;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    color: rgba(255,255,255,0.6);
+    font-weight: 300;
+    letter-spacing: 4px;
+  }
+
+  /* 向下箭头提示 */
+  .scroll-hint {
+    margin-top: 60px;
+    animation: bounce 2s ease-in-out infinite;
+    opacity: 0.5;
+  }
+  .scroll-hint svg { width: 32px; height: 32px; fill: rgba(255,255,255,0.5); }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(12px); }
+  }
+
+  /* 直达区域 */
+  .section-direct {
+    margin-top: 12vh;
+    text-align: center;
+    animation: fadeInUp 1s ease-out 0.3s both;
+  }
+  .section-direct h2 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 8px;
+    position: relative;
+    display: inline-block;
+  }
+  .section-direct h2::after {
+    content: '';
+    display: block;
+    width: 60px; height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    margin: 12px auto 0;
+    border-radius: 2px;
+  }
+
+  /* 卡片容器 */
+  .cards {
+    display: flex;
+    gap: 40px;
+    margin-top: 50px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* 系统卡片 */
+  .card {
+    position: relative;
+    width: 300px;
+    padding: 50px 30px 40px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    color: #fff;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .card:hover::before { transform: scaleX(1); }
+  .card:hover {
+    transform: translateY(-8px) scale(1.02);
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px var(--accent-glow);
+  }
+
+  .card-icon {
+    width: 80px; height: 80px;
+    margin: 0 auto 24px;
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+    background: var(--icon-bg);
+    box-shadow: 0 8px 32px var(--accent-glow);
+  }
+
+  .card h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .card p {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+
+  .card-btn {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 10px 28px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    background: var(--accent);
+    color: #fff;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  .card:hover .card-btn {
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  /* Win11 卡片主题 */
+  .card-win11 { --accent: linear-gradient(135deg, #0078d4, #00bcf2); --accent-glow: rgba(0,120,212,0.3); --icon-bg: linear-gradient(135deg, #0078d4, #00bcf2); }
+  .card-win11 .card-btn { background: linear-gradient(135deg, #0078d4, #00bcf2); }
+
+  /* macOS 卡片主题 */
+  .card-macos { --accent: linear-gradient(135deg, #007aff, #5856d6); --accent-glow: rgba(0,122,255,0.3); --icon-bg: linear-gradient(135deg, #007aff, #5856d6); }
+  .card-macos .card-btn { background: linear-gradient(135deg, #007aff, #5856d6); }
+
+  /* 底部 */
+  .footer {
+    margin-top: auto;
+    padding: 40px 20px 20px;
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 响应式 */
+  @media (max-width: 700px) {
+    .cards { gap: 24px; }
+    .card { width: 85vw; max-width: 320px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 星星背景 -->
+<div class="stars" id="stars"></div>
+
+<!-- 主内容 -->
+<div class="content">
+
+  <!-- 欢迎区 -->
+  <div class="hero">
+    <h1>欢迎来到模拟系统</h1>
+    <p>Welcome to Simulation System</p>
+  </div>
+
+  <!-- 向下箭头 -->
+  <div class="scroll-hint">
+    <svg viewBox="0 0 24 24"><path d="M12 16l-6-6h12z"/></svg>
+  </div>
+
+  <!-- 直达区域 -->
+  <div class="section-direct">
+    <h2>直 达</h2>
+
+    <div class="cards">
+      <!-- Win11 卡片 -->
+      <a class="card card-win11" href="win11.html">
+        <div class="card-icon">
+          <svg width="44" height="44" viewBox="0 0 88 88" fill="none">
+            <rect x="4" y="4" width="36" height="36" rx="4" fill="#f25022"/>
+            <rect x="48" y="4" width="36" height="36" rx="4" fill="#7fba00"/>
+            <rect x="4" y="48" width="36" height="36" rx="4" fill="#00a4ef"/>
+            <rect x="48" y="48" width="36" height="36" rx="4" fill="#ffb900"/>
+          </svg>
+        </div>
+        <h3>Windows 11</h3>
+        <p>体验 Windows 11 仿真桌面系统</p>
+        <span class="card-btn">进入系统</span>
+      </a>
+
+      <!-- macOS 卡片 -->
+      <a class="card card-macos" href="macos.html">
+        <div class="card-icon" style="border-radius:50%;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="white">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+        </div>
+        <h3>macOS</h3>
+        <p>体验 macOS 仿真桌面系统</p>
+        <span class="card-btn">进入系统</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">SIMULATION SYSTEM · 2026</div>
+</div>
+
+<script>
+// 生成星星背景
+(function() {
+  const container = document.getElementById('stars');
+  const count = 80;
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random() * 3 + 1;
+    star.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random()*100}%; left:${Math.random()*100}%;
+      --dur:${Math.random()*3+2}s;
+      animation-delay:${Math.random()*3}s;
+    `;
+    container.appendChild(star);
+  }
+})();
+</script>
+</body>
+</html>
